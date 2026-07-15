@@ -1,0 +1,28 @@
+# tor-exit-lookup configuration (optional).
+# Copy to ~/.config/tor-exit-lookup/config.toml to override defaults.
+# No credentials are needed — the Tor Project endpoints are public.
+
+[torproject]
+# Override the torbulkexitlist download URL (membership; optional).
+# The TOR_EXIT_LOOKUP_URL environment variable overrides this value.
+# bulk_url = "https://check.torproject.org/torbulkexitlist"
+
+# Override the exit-addresses URL (per-node metadata: fingerprint, published,
+# last_status). Set to "" to skip metadata entirely.
+# The TOR_EXIT_LOOKUP_EXIT_ADDRESSES_URL environment variable overrides this.
+# exit_addresses_url = "https://check.torproject.org/exit-addresses"
+
+# How old the cached list may be before `check` auto-refetches it. Floored at
+# 30 minutes out of fetch etiquette (the Tor Project asks clients not to poll
+# excessively). The TOR_EXIT_LOOKUP_TTL_MINUTES environment variable overrides.
+# ttl_minutes = 60
+
+# Whether `check` auto-refetches a stale list. Disable to keep checks strictly
+# offline (or pass --no-update per call). Env: TOR_EXIT_LOOKUP_AUTO_UPDATE.
+# auto_update = true
+
+[store]
+# Where the cached exit list is stored (optional).
+# Default: ~/.local/share/tor-exit-lookup/exitlist.json
+# The TOR_EXIT_LOOKUP_STORE environment variable overrides this value.
+# path = "~/.local/share/tor-exit-lookup/exitlist.json"
