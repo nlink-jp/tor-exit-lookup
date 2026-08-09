@@ -15,7 +15,11 @@ Together they profile an IP from three angles, over both CLI pipes and MCP.
 
 ## Install
 
-Not yet released. To build from source (Go 1.25+):
+```sh
+brew install nlink-jp/tap/tor-exit-lookup
+```
+
+Or build from source (Go 1.25+):
 
 ```sh
 git clone https://github.com/nlink-jp/tor-exit-lookup

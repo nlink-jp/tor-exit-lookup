@@ -14,7 +14,11 @@
 
 ## インストール
 
-未リリース。ソースからビルドする場合（Go 1.25+）:
+```sh
+brew install nlink-jp/tap/tor-exit-lookup
+```
+
+ソースからビルドする場合（Go 1.25+）:
 
 ```sh
 git clone https://github.com/nlink-jp/tor-exit-lookup
