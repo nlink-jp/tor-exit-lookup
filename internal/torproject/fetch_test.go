@@ -12,7 +12,8 @@ func TestFetchOK(t *testing.T) {
 	var gotUA string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotUA = r.Header.Get("User-Agent")
-		io.WriteString(w, "1.2.3.4\n5.6.7.8\n")
+		// Test handler: a failed write surfaces as the body assertion failing.
+		_, _ = io.WriteString(w, "1.2.3.4\n5.6.7.8\n")
 	}))
 	defer srv.Close()
 
@@ -21,7 +22,7 @@ func TestFetchOK(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Fetch: %v", err)
 	}
-	defer body.Close()
+	defer func() { _ = body.Close() }()
 	data, _ := io.ReadAll(body)
 	if string(data) != "1.2.3.4\n5.6.7.8\n" {
 		t.Errorf("body = %q", data)

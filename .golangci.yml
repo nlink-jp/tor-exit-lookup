@@ -1,0 +1,20 @@
+version: "2"
+
+linters:
+  settings:
+    errcheck:
+      # Writes to the CLI's own stdout/stderr. There is nothing to do with the
+      # error — reporting a failed write to the stream that just failed is
+      # circular, and the process exit code already carries the outcome.
+      #
+      # This is the ONLY errcheck exclusion. Everything else stays on
+      # deliberately: an unchecked Close on a file the tool wrote is a real
+      # defect class — `engine.writeStore` folds its temp file's Close into the
+      # returned error for exactly that reason, because a deferred, discarded
+      # Close there could install a truncated store and report success — and
+      # errcheck is what holds the next writer to the same shape. Every other
+      # discard in this repository is written `_ =` with the reason beside it.
+      exclude-functions:
+        - fmt.Fprint
+        - fmt.Fprintf
+        - fmt.Fprintln

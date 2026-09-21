@@ -88,7 +88,8 @@ func (e *Engine) Update(ctx context.Context) (UpdateResult, error) {
 		return UpdateResult{}, err
 	}
 	addrs, skipped, err := exitlist.ParseBulkList(body)
-	body.Close()
+	// The body is fully consumed; its Close reports nothing actionable.
+	_ = body.Close()
 	if err != nil {
 		return UpdateResult{}, err
 	}
@@ -131,7 +132,8 @@ func (e *Engine) fetchMeta(ctx context.Context) (map[netip.Addr]exitlist.Meta, i
 	if err != nil {
 		return nil, 0, err
 	}
-	defer body.Close()
+	// Read-only response body: a failed Close carries no outcome to report.
+	defer func() { _ = body.Close() }()
 	return exitlist.ParseExitAddresses(body)
 }
 
@@ -147,7 +149,9 @@ func (e *Engine) writeStore(addrs []netip.Addr, meta map[netip.Addr]exitlist.Met
 		return err
 	}
 	tmpName := tmp.Name()
-	defer os.Remove(tmpName) // no-op after a successful rename
+	// No-op after a successful rename; on the failure paths the temp file is
+	// already unusable, so a failed unlink changes nothing.
+	defer func() { _ = os.Remove(tmpName) }()
 
 	err = exitlist.Serialize(tmp, addrs, meta, sources, generatedUnix)
 	if cerr := tmp.Close(); err == nil {

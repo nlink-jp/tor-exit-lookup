@@ -13,9 +13,18 @@ All notable changes to this project are documented here. The format follows
   single `obj()` helper that sets the flag, and an arch test fails if a tool's
   schema omits it — org ADR-021 §10 requires the test as well as the flag,
   because a rule stated only in prose is re-decided by whoever adds the next
-  tool. The server's own argument decoding is unchanged and still lenient: it
-  does not use `DisallowUnknownFields`, so an unknown argument that reaches it
-  is ignored rather than refused.
+  tool.
+
+- `make check` is green again: `make lint` failed on 17 errcheck findings.
+  Seven were `fmt.Fprint*` writes to the CLI's own stdout/stderr, now excluded
+  in a new `.golangci.yml` with the reasoning recorded there — reporting a
+  failed write to the stream that just failed is circular, and the exit code
+  already carries the outcome. The other ten were deliberate discards (reading
+  a config file, closing response bodies already consumed, the post-rename
+  temp-file unlink, and test-only decodes whose zero value the next assertion
+  rejects) and are now written `_ =` with the reason beside each. None was a
+  real unchecked error: the one write path that matters, `engine.writeStore`,
+  already folds its temp file's `Close` into the returned error.
 
 ## [0.1.0] - 2026-07-15
 

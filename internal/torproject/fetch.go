@@ -51,7 +51,8 @@ func (f *HTTPFetcher) Fetch(ctx context.Context, rawURL string) (io.ReadCloser, 
 	}
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(io.LimitReader(resp.Body, 512))
-		resp.Body.Close()
+		// Error path: the body is already in the message being returned.
+		_ = resp.Body.Close()
 		return nil, fmt.Errorf("download %s: HTTP %d: %s", rawURL, resp.StatusCode, trimBody(body))
 	}
 	return resp.Body, nil

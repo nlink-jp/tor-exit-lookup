@@ -115,7 +115,8 @@ func TestServeSequence(t *testing.T) {
 	var initRes struct {
 		ServerInfo struct{ Name string } `json:"serverInfo"`
 	}
-	json.Unmarshal(resps[0].Result, &initRes)
+	// A failed decode leaves the zero value, which the assertion below rejects.
+	_ = json.Unmarshal(resps[0].Result, &initRes)
 	if initRes.ServerInfo.Name != "tor-exit-lookup" {
 		t.Errorf("serverInfo.name = %q", initRes.ServerInfo.Name)
 	}
@@ -123,7 +124,7 @@ func TestServeSequence(t *testing.T) {
 	var listRes struct {
 		Tools []struct{ Name string } `json:"tools"`
 	}
-	json.Unmarshal(resps[1].Result, &listRes)
+	_ = json.Unmarshal(resps[1].Result, &listRes)
 	if len(listRes.Tools) != 4 {
 		t.Errorf("tools = %d, want 4", len(listRes.Tools))
 	}
@@ -189,7 +190,8 @@ func TestInitializeInstructionsAndGetUsage(t *testing.T) {
 	var init struct {
 		Instructions string `json:"instructions"`
 	}
-	json.Unmarshal(resps[0].Result, &init)
+	// A failed decode leaves the zero value, which the assertion below rejects.
+	_ = json.Unmarshal(resps[0].Result, &init)
 	if !strings.Contains(init.Instructions, "get_usage") {
 		t.Errorf("initialize instructions should mention get_usage: %q", init.Instructions)
 	}
