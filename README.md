@@ -89,7 +89,16 @@ failing. Disable per-call with `--no-update`, or globally with
 `tor-exit-lookup mcp` speaks JSON-RPC 2.0 over stdio (standard library only).
 Tools: `check_ip`, `list_status`, `update_list`, and `get_usage` (an embedded
 operating manual; the server also advertises it via the initialize
-`instructions` field). Example registration:
+`instructions` field).
+
+**Arguments are checked strictly.** A call carrying an argument a tool does not
+declare fails, naming it — `arguments: json: unknown field "ipx"` — rather than
+running without it. A batch sent under a misspelt `ips` used to check nothing at
+all and answer "provide 'ip'". Wrong-typed arguments are refused the same way,
+and nothing runs before the arguments decode. Omitting arguments entirely still
+means "none".
+
+Example registration:
 
 ```json
 {

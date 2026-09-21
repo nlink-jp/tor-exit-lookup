@@ -42,10 +42,21 @@ IP → is it a Tor Exit node?
 minutes; the CLI auto-refetches past a TTL (30-minute floor) out of fetch
 etiquette. `list_status` reports `stale:true` once the copy is over 24 hours old.
 
+## Arguments are strict
+
+Every tool refuses an argument it does not declare, naming it:
+`arguments: json: unknown field "ipx"`. A wrong-typed argument is refused the
+same way. Nothing runs before the arguments decode, so a rejected call reads no
+list and downloads nothing — fix the name or the type and call again. This is
+the enforcing half of the closed schemas (org ADR-021 §4); a batch sent under a
+misspelt `ips` used to check nothing at all.
+
 ## Recovery table
 
 | Symptom (result text) | What it means | What to do |
 |---|---|---|
+| `arguments: json: unknown field "…"` | An argument name this tool does not declare — usually a typo | Fix the spelling and call again; the named field is the offending one |
+| `arguments: json: cannot unmarshal …` | An argument of the wrong JSON type (`ip` is a string, `ips` an array of strings) | Check the argument's type in the tool list above and call again |
 | `no local exit list …` | The list has not been downloaded | Call `update_list` |
 | `check_ip` → `error:"invalid address"` | The input was not a valid IP | Fix the input |
 | `is_exit:false` (no error) | Address is not a known Tor exit | Expected; no action |

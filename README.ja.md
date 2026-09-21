@@ -86,7 +86,16 @@ Tor exit list は頻繁に変わります（上流は約 30 分ごとに更新�
 
 `tor-exit-lookup mcp` は stdio 上で JSON-RPC 2.0 を話します（標準ライブラリのみ）。
 ツール: `check_ip`、`list_status`、`update_list`、`get_usage`（埋め込みの操作
-マニュアル。initialize の `instructions` フィールドでも案内）。登録例:
+マニュアル。initialize の `instructions` フィールドでも案内）。
+
+**引数は厳格に検査されます.** ツールが宣言していない引数を含む呼び出しは、その
+名前を挙げて失敗します（`arguments: json: unknown field "ipx"`）。従来は無視して
+実行していたため、`ips` の綴り間違いで渡したアドレス群は 1 件も照合されず、
+`provide 'ip'`（引数が無い、という意味の応答）が返っていました。型が違う引数も
+同様に拒否されます。引数のデコードより前には何も実行しません。引数をまったく
+渡さない呼び出しは従来どおり「引数なし」として扱われます。
+
+登録例:
 
 ```json
 {
