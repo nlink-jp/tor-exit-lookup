@@ -24,6 +24,17 @@ const Instructions = "tor-exit-lookup reports whether an IP address is a Tor Exi
 	"An IP is an exit node when is_exit is true; fingerprint/last_status are optional enrichment. " +
 	"Call get_usage for the full tool reference and error-recovery table."
 
+// obj builds a tool's input schema. Every schema goes through here so that
+// org ADR-021 §10's `additionalProperties: false` is set once instead of being
+// remembered per tool — the next tool added gets the closed schema for free.
+func obj(props map[string]any, required ...string) map[string]any {
+	s := map[string]any{"type": "object", "properties": props, "additionalProperties": false}
+	if len(required) > 0 {
+		s["required"] = required
+	}
+	return s
+}
+
 // toolsList returns the advertised tool set with JSON Schema for each input.
 func (s *server) toolsList() any {
 	strArray := map[string]any{"type": "array", "items": map[string]any{"type": "string"}}
@@ -32,28 +43,25 @@ func (s *server) toolsList() any {
 			{
 				"name":        "get_usage",
 				"description": "Return this server's operating manual (markdown): the tools, the offline list lifecycle, and the error-recovery table. Call it once before first use.",
-				"inputSchema": map[string]any{"type": "object", "properties": map[string]any{}},
+				"inputSchema": obj(map[string]any{}),
 			},
 			{
 				"name":        "check_ip",
 				"description": "Report whether one or more IP addresses are Tor Exit nodes, answered offline from the cached list. Returns is_exit per address, plus optional fingerprint / published / last_status metadata on a hit.",
-				"inputSchema": map[string]any{
-					"type": "object",
-					"properties": map[string]any{
-						"ip":  map[string]any{"type": "string", "description": "A single IPv4 or IPv6 address."},
-						"ips": strArray,
-					},
-				},
+				"inputSchema": obj(map[string]any{
+					"ip":  map[string]any{"type": "string", "description": "A single IPv4 or IPv6 address."},
+					"ips": strArray,
+				}),
 			},
 			{
 				"name":        "update_list",
 				"description": "Download the latest Tor exit list (torbulkexitlist, plus exit-addresses metadata) and rebuild the local store. No credentials required.",
-				"inputSchema": map[string]any{"type": "object", "properties": map[string]any{}},
+				"inputSchema": obj(map[string]any{}),
 			},
 			{
 				"name":        "list_status",
 				"description": "Report the cached list's generation time, exit-node count (v4/v6), metadata count, sources, and whether it is stale.",
-				"inputSchema": map[string]any{"type": "object", "properties": map[string]any{}},
+				"inputSchema": obj(map[string]any{}),
 			},
 		},
 	}
