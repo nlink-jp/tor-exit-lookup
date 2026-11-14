@@ -1,3 +1,3 @@
 module github.com/nlink-jp/tor-exit-lookup
 
-go 1.25.0
+go 1.27.4

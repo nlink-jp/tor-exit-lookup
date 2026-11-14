@@ -18,7 +18,7 @@
 brew install nlink-jp/tap/tor-exit-lookup
 ```
 
-ソースからビルドする場合（Go 1.25+）:
+ソースからビルドする場合（Go 1.27.4+）:
 
 ```sh
 git clone https://github.com/nlink-jp/tor-exit-lookup
