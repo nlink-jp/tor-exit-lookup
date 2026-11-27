@@ -100,6 +100,11 @@ func (e *Engine) Update(ctx context.Context) (UpdateResult, error) {
 	var metaWarning string
 	if e.Cfg.ExitAddressesURL != "" {
 		m, ms, merr := e.fetchMeta(ctx)
+		if merr != nil && ctx.Err() != nil {
+			// Cancelled, not failed: the caller abandoned the update, so the
+			// store is not rewritten without its metadata.
+			return UpdateResult{}, ctx.Err()
+		}
 		if merr != nil {
 			metaWarning = merr.Error() // soft-fail: keep membership, note the miss
 		} else {

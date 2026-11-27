@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -186,5 +187,37 @@ func TestIsStale(t *testing.T) {
 	old := time.Unix(1720000000, 0).Add(-2 * 24 * time.Hour)
 	if stale, age := e.IsStale(old); !stale || age < StaleAfter {
 		t.Errorf("2d old should be stale (age=%v)", age)
+	}
+}
+
+// cancelOnMeta serves the membership list, then cancels the update while the
+// metadata is being fetched — the caller giving up mid-update.
+type cancelOnMeta struct {
+	fakeFetcher
+	cancel context.CancelFunc
+}
+
+func (c cancelOnMeta) Fetch(ctx context.Context, url string) (io.ReadCloser, error) {
+	if strings.Contains(url, "exit-addresses") {
+		c.cancel()
+		<-ctx.Done()
+		return nil, ctx.Err()
+	}
+	return c.fakeFetcher.Fetch(ctx, url)
+}
+
+// A metadata failure is soft, but a cancellation is not a failure: the
+// caller abandoned the update, so the store is not rewritten without its
+// metadata (ADR-0001 §5).
+func TestACancelledUpdateWritesNothing(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	e := newEngine(t, fakeFetcher{bulk: sampleList})
+	e.Fetcher = cancelOnMeta{fakeFetcher: fakeFetcher{bulk: sampleList}, cancel: cancel}
+	if _, err := e.Update(ctx); !errors.Is(err, context.Canceled) {
+		t.Fatalf("Update = %v, want context.Canceled", err)
+	}
+	if _, err := os.Stat(e.Cfg.StorePath); !os.IsNotExist(err) {
+		t.Errorf("a cancelled update wrote the store (stat: %v)", err)
 	}
 }
