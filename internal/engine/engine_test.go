@@ -221,3 +221,32 @@ func TestACancelledUpdateWritesNothing(t *testing.T) {
 		t.Errorf("a cancelled update wrote the store (stat: %v)", err)
 	}
 }
+
+// cancelAfterMeta answers both fetches and cancels as the metadata arrives,
+// after the last answer and before the engine writes.
+type cancelAfterMeta struct {
+	fakeFetcher
+	cancel context.CancelFunc
+}
+
+func (c cancelAfterMeta) Fetch(ctx context.Context, url string) (io.ReadCloser, error) {
+	if strings.Contains(url, "exit-addresses") {
+		defer c.cancel()
+	}
+	return c.fakeFetcher.Fetch(ctx, url)
+}
+
+// A cancellation that lands once both answers have arrived still writes
+// nothing.
+func TestAnUpdateCancelledAfterItsAnswersWritesNothing(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	e := newEngine(t, fakeFetcher{bulk: sampleList, meta: sampleExitAddresses})
+	e.Fetcher = cancelAfterMeta{fakeFetcher: fakeFetcher{bulk: sampleList, meta: sampleExitAddresses}, cancel: cancel}
+	if _, err := e.Update(ctx); !errors.Is(err, context.Canceled) {
+		t.Fatalf("Update = %v, want context.Canceled", err)
+	}
+	if _, err := os.Stat(e.Cfg.StorePath); !os.IsNotExist(err) {
+		t.Errorf("a cancelled update wrote the store (stat: %v)", err)
+	}
+}

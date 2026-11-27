@@ -113,6 +113,11 @@ func (e *Engine) Update(ctx context.Context) (UpdateResult, error) {
 		}
 	}
 
+	// A cancellation that lands after the answers arrived still stops the
+	// update before it writes (server-migration §5).
+	if err := ctx.Err(); err != nil {
+		return UpdateResult{}, err
+	}
 	generatedUnix := e.now().Unix()
 	if err := e.writeStore(addrs, meta, sources, generatedUnix); err != nil {
 		return UpdateResult{}, err
