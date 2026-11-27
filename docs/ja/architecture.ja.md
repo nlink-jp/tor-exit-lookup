@@ -6,8 +6,8 @@
 
 ## 目的
 
-一つの問いにオフラインで高速に答える——**この IP は Tor Exit node か？** 外部
-依存ゼロの安価な membership 判定に最適化し、asn-lookup / abuse-lookup と並んで
+一つの問いにオフラインで高速に答える——**この IP は Tor Exit node か？** サードパーティ製の
+依存を持たない安価な membership 判定に最適化し、asn-lookup / abuse-lookup と並んで
 ログトリアージ・IR・シェルパイプラインに組み込めることを狙います。
 
 ## なぜオフラインリストか（ライブ判定ではなく）

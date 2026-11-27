@@ -88,9 +88,9 @@ Tor exit list は頻繁に変わります（上流は約 30 分ごとに更新�
 それより前の `initialize` の握手（2025-11-25・2025-06-18・2024-11-05）です。パイプで流し込んだ要求には、
 入力の終わりで終了する前にすべて答えます。
 
-`tor-exit-lookup mcp` は stdio 上で JSON-RPC 2.0 を話します（標準ライブラリのみ）。
+`tor-exit-lookup mcp` は stdio 上で JSON-RPC 2.0 を話します。
 ツール: `check_ip`、`list_status`、`update_list`、`get_usage`（埋め込みの操作
-マニュアル。initialize の `instructions` フィールドでも案内）。
+マニュアル。クライアントがサーバーを開いたときに送る MCP の `instructions` でも案内）。
 
 **引数は厳格に検査されます.** ツールが宣言していない引数を含む呼び出しは、その
 名前を挙げて失敗します（`arguments: json: unknown field "ipx"`）。従来は無視して
@@ -152,7 +152,8 @@ make test        # go test -race -cover ./...
 make check       # lint + test + build-all
 ```
 
-外部依存ゼロ（標準ライブラリのみ）。設計の背景は
+サードパーティ製の依存なし — 標準ライブラリと、MCP のプロトコルを担う組織の共通モジュール
+[nlink-jp/mcp](https://github.com/nlink-jp/mcp) だけを使います。設計の背景は
 [docs/ja/architecture.ja.md](docs/ja/architecture.ja.md) を参照。
 
 ## ライセンス

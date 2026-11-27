@@ -6,7 +6,7 @@ each package does, read the package doc comments and [AGENTS.md](../../AGENTS.md
 ## Goal
 
 Answer one question fast and offline: **is this IP a Tor Exit node?** The tool
-optimizes for a cheap, dependency-free membership test that fits into log
+optimizes for a cheap membership test, with no third-party dependency, that fits into log
 triage, IR, and shell pipelines alongside asn-lookup and abuse-lookup.
 
 ## Why an offline list, not a live check
