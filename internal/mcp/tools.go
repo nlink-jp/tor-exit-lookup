@@ -17,8 +17,8 @@ import (
 //go:embed usage.md
 var usageMarkdown string
 
-// Instructions is the initialize-time hint (surfaced via the MCP `instructions`
-// field) that makes get_usage discoverable and steers clients away from common
+// Instructions is the hint a client receives when it opens the server (the MCP
+// `instructions` field, in initialize or server/discover) that makes get_usage discoverable and steers clients away from common
 // errors.
 const Instructions = "tor-exit-lookup reports whether an IP address is a Tor Exit node, fully offline from a locally cached list. " +
 	"Call list_status first; if there is no list, call update_list (no credentials needed). " +
@@ -62,67 +62,61 @@ func decodeArgs(raw json.RawMessage, into any) error {
 	return nil
 }
 
+
 // toolsList returns the advertised tool set with JSON Schema for each input.
-func (s *server) toolsList() any {
+func (s *server) toolsList() []map[string]any {
 	strArray := map[string]any{"type": "array", "items": map[string]any{"type": "string"}}
-	return map[string]any{
-		"tools": []map[string]any{
-			{
-				"name":        "get_usage",
-				"description": "Return this server's operating manual (markdown): the tools, the offline list lifecycle, and the error-recovery table. Call it once before first use.",
-				"inputSchema": obj(map[string]any{}),
-			},
-			{
-				"name":        "check_ip",
-				"description": "Report whether one or more IP addresses are Tor Exit nodes, answered offline from the cached list. Returns is_exit per address, plus optional fingerprint / published / last_status metadata on a hit.",
-				"inputSchema": obj(map[string]any{
-					"ip":  map[string]any{"type": "string", "description": "A single IPv4 or IPv6 address."},
-					"ips": strArray,
-				}),
-			},
-			{
-				"name":        "update_list",
-				"description": "Download the latest Tor exit list (torbulkexitlist, plus exit-addresses metadata) and rebuild the local store. No credentials required.",
-				"inputSchema": obj(map[string]any{}),
-			},
-			{
-				"name":        "list_status",
-				"description": "Report the cached list's generation time, exit-node count (v4/v6), metadata count, sources, and whether it is stale.",
-				"inputSchema": obj(map[string]any{}),
-			},
+	return []map[string]any{
+		{
+			"name":        "get_usage",
+			"description": "Return this server's operating manual (markdown): the tools, the offline list lifecycle, and the error-recovery table. Call it once before first use.",
+			"inputSchema": obj(map[string]any{}),
+		},
+		{
+			"name":        "check_ip",
+			"description": "Report whether one or more IP addresses are Tor Exit nodes, answered offline from the cached list. Returns is_exit per address, plus optional fingerprint / published / last_status metadata on a hit.",
+			"inputSchema": obj(map[string]any{
+				"ip":  map[string]any{"type": "string", "description": "A single IPv4 or IPv6 address."},
+				"ips": strArray,
+			}),
+		},
+		{
+			"name":        "update_list",
+			"description": "Download the latest Tor exit list (torbulkexitlist, plus exit-addresses metadata) and rebuild the local store. No credentials required.",
+			"inputSchema": obj(map[string]any{}),
+		},
+		{
+			"name":        "list_status",
+			"description": "Report the cached list's generation time, exit-node count (v4/v6), metadata count, sources, and whether it is stale.",
+			"inputSchema": obj(map[string]any{}),
 		},
 	}
 }
 
-func (s *server) toolsCall(ctx context.Context, params json.RawMessage) (toolResult, *rpcError) {
-	var p struct {
-		Name      string          `json:"name"`
-		Arguments json.RawMessage `json:"arguments"`
-	}
-	if err := json.Unmarshal(params, &p); err != nil {
-		return toolResult{}, &rpcError{Code: -32602, Message: "invalid params: " + err.Error()}
-	}
-	switch p.Name {
+// toolsCall dispatches one call by tool name and builds its result.
+func (s *server) toolsCall(ctx context.Context, name string, args json.RawMessage) toolResult {
+	switch name {
 	case "get_usage":
 		// No arguments — which still means "none", not "any".
-		if err := decodeArgs(p.Arguments, &struct{}{}); err != nil {
-			return textResult(true, err.Error()), nil
+		if err := decodeArgs(args, &struct{}{}); err != nil {
+			return textResult(true, err.Error())
 		}
-		return textResult(false, usageMarkdown), nil
+		return textResult(false, usageMarkdown)
 	case "check_ip":
-		return s.toolCheckIP(p.Arguments), nil
+		return s.toolCheckIP(args)
 	case "update_list":
-		if err := decodeArgs(p.Arguments, &struct{}{}); err != nil {
-			return textResult(true, err.Error()), nil
+		if err := decodeArgs(args, &struct{}{}); err != nil {
+			return textResult(true, err.Error())
 		}
-		return s.toolUpdate(ctx), nil
+		return s.toolUpdate(ctx)
 	case "list_status":
-		if err := decodeArgs(p.Arguments, &struct{}{}); err != nil {
-			return textResult(true, err.Error()), nil
+		if err := decodeArgs(args, &struct{}{}); err != nil {
+			return textResult(true, err.Error())
 		}
-		return s.toolStatus(), nil
+		return s.toolStatus()
 	default:
-		return toolResult{}, &rpcError{Code: -32602, Message: "unknown tool: " + p.Name}
+		// Not reached: the protocol layer refuses a tool it did not register.
+		return textResult(true, "unknown tool: "+name)
 	}
 }
 
