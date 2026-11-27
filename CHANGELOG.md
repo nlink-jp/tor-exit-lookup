@@ -39,6 +39,7 @@ All notable changes to this project are documented here. The format follows
 - An argument spelt in another case (`{"IP": ...}`) was accepted as the declared one; it is now refused by name.
 - SIGINT or SIGTERM ended the MCP server by killing the process; a signal now ends it through its context, so its cleanup runs.
 - A cancellation during the exit-addresses download was taken for a soft metadata failure, and the store was rewritten without metadata; a cancellation now stops the update.
+- An `update_list` cancelled once both downloads had arrived still wrote the store. It now stops before writing.
 
 ## [0.2.2] - 2026-11-27
 
