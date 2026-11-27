@@ -20,7 +20,9 @@ make vuln            # govulncheck over the build; `make package` runs it first 
 make verify-release  # gate: notarized, fresh, runs at this version, clean linux archives (run before upload)
 ```
 
-Go 1.27.4+. **No external dependencies** — standard library only.
+Go 1.27.4+. **No third-party dependencies** — the standard library, plus nlink-jp
+modules written on the same rule (`github.com/nlink-jp/mcp` for the MCP
+protocol, organization ADR-030; ADR-0001).
 
 ## Layout
 
@@ -32,7 +34,7 @@ internal/torproject/    Fetcher interface + HTTPFetcher (public endpoints, User-
 internal/config/        Sectioned-TOML subset parser + env/flag resolution (no secrets).
 internal/engine/        Ties config+fetcher+store: LoadList, Update (2-source), Lookup, EnsureFresh, IsStale.
 internal/app/           CLI: dispatch, check/update/status/mcp, output; grep-style + batch/JSON.
-internal/mcp/           Zero-dep stdio JSON-RPC 2.0 server + tools.
+internal/mcp/           MCP tools on nlink-jp/mcp's server.ToolServer (both eras; ADR-0001)
   usage.md              Embedded get_usage manual (pinned by usage_test.go).
 ```
 
@@ -63,6 +65,15 @@ internal/mcp/           Zero-dep stdio JSON-RPC 2.0 server + tools.
 
 ## Gotchas
 
+- **The MCP protocol is nlink-jp/mcp's** (ADR-0001, organization ADR-030 §6).
+  `internal/mcp` never handles `initialize` or `server/discover` itself: `Serve`
+  registers `toolsList()` on a `server.ToolServer` and each handler calls
+  `toolsCall`. Tests replay their requests through the module's `client`
+  (`clienttest_test.go`) and run its three probe clients; do not write the
+  handshake by hand in a test. Before initialize, `tools/*` is -32602 — the
+  module's rule, not a defect. Argument names are matched exactly
+  (`decodeArgs`, `argNames`).
+
 - **Exit-code contract depends on mode:** single positional IP in text mode is
   grep-style tri-state `0` (is exit) / `1` (not exit) / `2` (error). Multiple
   IPs, stdin, or `--json` switch to batch mode: per-IP results on stdout, exit
@@ -75,7 +86,8 @@ internal/mcp/           Zero-dep stdio JSON-RPC 2.0 server + tools.
   the descriptive User-Agent, cache the result, and rely on the 30-minute TTL
   floor (`config.MinTTL`) to rate-limit auto-refetch. `status` never fetches.
 - **usage.md is pinned:** `internal/mcp/usage.md` is embedded and returned by
-  `get_usage`; the initialize `instructions` field points clients to it.
+  `get_usage`; the MCP `instructions` (sent when a client opens the
+  server: `initialize`, or `server/discover` in the modern era) points clients to it.
   Adding/renaming a tool or a documented result field means updating usage.md —
   `usage_test.go` fails if the manual omits a tool name or a key term.
 - **MCP has no workspace:** results are small (a yes/no + a little metadata), so

@@ -86,6 +86,11 @@ failing. Disable per-call with `--no-update`, or globally with
 
 ## MCP server
 
+The server speaks both eras of the protocol: the 2026-07-28 revision (clients
+that probe with `server/discover`) and the earlier `initialize` handshake
+(2025-11-25, 2025-06-18, 2024-11-05). Requests piped in are all answered before
+it exits at end of input.
+
 `tor-exit-lookup mcp` speaks JSON-RPC 2.0 over stdio (standard library only).
 Tools: `check_ip`, `list_status`, `update_list`, and `get_usage` (an embedded
 operating manual; the server also advertises it via the initialize

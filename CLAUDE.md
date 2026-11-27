@@ -29,12 +29,13 @@ internal/torproject/    Fetcher interface + HTTPFetcher (public endpoints, User-
 internal/config/        Sectioned-TOML subset + env/flag resolution (no credentials)
 internal/engine/        LoadList / Update (2-source, atomic) / Lookup / EnsureFresh / IsStale
 internal/app/           Dispatch + check/update/status/mcp; --json, batch, grep-style exit codes
-internal/mcp/           Zero-dep stdio JSON-RPC 2.0 server + tools (check_ip/list_status/update_list/get_usage)
+internal/mcp/           MCP tools on nlink-jp/mcp's server.ToolServer (both eras; ADR-0001) (check_ip/list_status/update_list/get_usage)
 ```
 
 Core logic takes io.Reader/io.Writer and injected dependencies for testability
-(the fetcher is an interface, mocked in tests). **No external dependencies —
-standard library only.** See [docs/en/architecture.md](docs/en/architecture.md)
+(the fetcher is an interface, mocked in tests). **No third-party dependencies** — the standard library, plus nlink-jp
+modules written on the same rule (`github.com/nlink-jp/mcp` for the MCP
+protocol, organization ADR-030; ADR-0001). See [docs/en/architecture.md](docs/en/architecture.md)
 for the "why".
 
 ## Key conventions

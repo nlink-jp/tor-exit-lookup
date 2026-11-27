@@ -84,6 +84,10 @@ Tor exit list は頻繁に変わります（上流は約 30 分ごとに更新�
 
 ## MCP サーバー
 
+サーバーは、プロトコルの新旧両方の時代を話します。2026-07-28 版（`server/discover` で探るクライアント）と、
+それより前の `initialize` の握手（2025-11-25・2025-06-18・2024-11-05）です。パイプで流し込んだ要求には、
+入力の終わりで終了する前にすべて答えます。
+
 `tor-exit-lookup mcp` は stdio 上で JSON-RPC 2.0 を話します（標準ライブラリのみ）。
 ツール: `check_ip`、`list_status`、`update_list`、`get_usage`（埋め込みの操作
 マニュアル。initialize の `instructions` フィールドでも案内）。
