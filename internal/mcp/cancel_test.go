@@ -60,6 +60,7 @@ func TestACancelledUpdateLeavesTheStoreAsItWas(t *testing.T) {
 	case <-time.After(5 * time.Second):
 		t.Fatal("the download never returned")
 	}
+	time.Sleep(500 * time.Millisecond) // the handler finishing whatever follows the download
 	after, err := os.ReadFile(e.Cfg.StorePath)
 	if err != nil {
 		t.Fatal(err)
